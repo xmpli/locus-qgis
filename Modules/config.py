@@ -1,4 +1,5 @@
 from .logging import addLogEntry
+import shutil
 import json
 import os
 
@@ -12,8 +13,11 @@ class Config():
         if not os.path.exists(home + '/Xmpli'):
             os.makedirs(home + '/Xmpli')
 
-        if not os.path.exists(home + '/Xmpli/Cache'):
-            os.makedirs(home + '/Xmpli/Cache')
+        if not os.path.exists(home + '/Xmpli/tmp'):
+            os.makedirs(home + '/Xmpli/tmp')
+        else:
+            shutil.rmtree(home + '/Xmpli/tmp')
+            os.makedirs(home + '/Xmpli/tmp')
 
         if not os.path.isfile(home + '/Xmpli/Locus_config.json'):
             config_data = {

@@ -32,6 +32,17 @@ class SearchWidget():
             self.canvas = iface.mapCanvas()
             self.iface = iface
             self.bboxStarted = False
+            self.queryLayers = {
+                'category_search': False,
+                'bounding_box': False,
+                'reference_search': False,
+                'point_search': False,
+            }
+
+            for key in self.queryLayers:
+                layers = QgsProject.instance().mapLayersByName('Locus_API_' + key + '_query_results')
+                if len(layers) > 0:
+                    self.queryLayers[key] = layers[0]
 
             self.options = {
                 'category': '',
@@ -163,19 +174,32 @@ class SearchWidget():
             self.options['search_text'] = urllib.parse.quote(self.searchField.text(), safe='')
             self.options['distance'] = urllib.parse.quote(self.distanceField.text(), safe='')
             self.options['reference'] = urllib.parse.quote(self.referenceField.text(), safe='')
+            self.toggleInputs(False)
 
             data = json.dumps(API.makeCall(self.options, debug=True))
             date = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            fileName = home + '/Xmpli/Cache/Locus_' + date + '_' + self.options['method'] + '_results.json'
+            fileName = home + '/Xmpli/tmp/Locus_' + date + '_' + self.options['method'] + '_results.json'
             addLogEntry('Create cache file: ' + fileName)
 
             with io.open(fileName, 'w+', encoding="utf-8") as wf:
                 wf.write(data)
 
-            addLogEntry('Create Layer')
-            vectorLayer = QgsVectorLayer(fileName, self.options['method'] + '_results', 'ogr')
-            addLogEntry('Add Layer')
-            QgsProject.instance().addMapLayers([vectorLayer])
+            if not self.queryLayers[self.options['method']]:
+                addLogEntry('Create Layer')
+                self.queryLayers[self.options['method']] = QgsVectorLayer(fileName, 'Locus_API_' + self.options['method'] + '_query_results', 'ogr')
+                addLogEntry('Add Layer')
+                QgsProject.instance().addMapLayer(self.queryLayers[self.options['method']])
+            else:
+                addLogEntry('Append to layer')
+                vectorLayer = QgsVectorLayer(fileName, self.options['method'] + '_results', 'ogr')
+                addLogEntry('Get Provider')
+                dataProvider = self.queryLayers[self.options['method']].dataProvider()
+                addLogEntry('Get Features')
+                features = vectorLayer.getFeatures()
+                addLogEntry('Append Features')
+                dataProvider.addFeatures(features)
+                self.queryLayers[self.options['method']].updateExtents()
+            self.toggleInputs(True)
 
 
         def categoryChanged(self, category):
