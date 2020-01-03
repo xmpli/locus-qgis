@@ -58,7 +58,7 @@ class LocusQGIS:
 
     def run(self):
         # Set the default widget to the search widget
-        self.dockwidget = SearchWidget.widget()
+        self.dockwidget = SearchWidget.widget(self.iface)
         self.dockwidget.closingPlugin.connect(self.onClosePlugin)
 
         # Load the widget

@@ -5,7 +5,6 @@ import os
 # Store local data in %user%/AppData/Roaming
 home = os.getenv('APPDATA')
 
-
 class Config():
     config = {}
 
