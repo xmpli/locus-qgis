@@ -13,9 +13,9 @@ http = urllib3.PoolManager(
 
 callPoints = {
     'category_search': 'search/{category}/{search_text}',
-    'bounding_box': 'bboxsearch/',
-    'reference_search': 'refsearch/',
-    'point_search': 'pointsearch/',
+    'bounding_box': 'bboxsearch/{bbox}/{category}/{search_text}',
+    'reference_search': 'refsearch/{reference}/{category}',
+    'point_search': 'pointsearch/{location}/{distance}',
     'list_categories': 'list_categories/',
 }
 
@@ -30,7 +30,8 @@ class API():
         })
 
         addLogEntry('Open Connection')
-        content = conn.data.decode('UTF-8')
+        content = conn.data.decode('UTF-8', 'backslashreplace')
+        print(content)
         addLogEntry('Received data: \n -- [BEGIN DATA] --\n' + content + '\n -- [END DATA] --')
         data = json.loads(content)
         if debug:
@@ -57,7 +58,21 @@ class API():
             if sect == '{category}':
                 url.append(options['category'])
             elif sect == '{search_text}':
-                url.append(options['search_text'])
+                if len(options['search_text']) > 0:
+                    url.append(options['search_text'])
+            elif sect == '{distance}':
+                if len(options['distance']) > 0:
+                    url.append(options['distance'])
+            elif sect == '{reference}':
+                if len(options['reference']) > 0:
+                    url.append(options['reference'])
+            elif sect == '{location}':
+                part = options['crs'] + ';POINT(' + options['location']['x'] + ' ' + options['location']['y'] + ')'
+                url.append(part)
+            elif sect == '{bbox}':
+                maxPart = str(options['bbox']['maxx']) + ' ' + str(options['bbox']['maxy'])
+                minPart = str(options['bbox']['minx']) + ' ' + str(options['bbox']['miny'])
+                url.append(maxPart + ',' + minPart)
 
         print(url)
         return endpoint + '/'.join(url)
