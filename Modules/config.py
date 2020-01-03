@@ -5,13 +5,15 @@ import os
 # Store local data in %user%/AppData/Roaming
 home = os.getenv('APPDATA')
 
-
 class Config():
     config = {}
 
     def __init__(self):
         if not os.path.exists(home + '/Xmpli'):
             os.makedirs(home + '/Xmpli')
+
+        if not os.path.exists(home + '/Xmpli/Cache'):
+            os.makedirs(home + '/Xmpli/Cache')
 
         if not os.path.isfile(home + '/Xmpli/Locus_config.json'):
             config_data = {

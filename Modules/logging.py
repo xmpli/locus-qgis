@@ -3,6 +3,7 @@ import os.path
 import simplejson
 from qgis.core import QgsMessageLog
 import os
+import io
 
 home = os.getenv('APPDATA')
 
@@ -24,11 +25,11 @@ def addLogEntry(message, error=False, printstr=False):
     else:
         line = '[' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '] - ' + message
     if not os.path.isfile(home + '/Xmpli/Logs/Locus_' + sIdent + '.txt'):
-        with open(home + '/Xmpli/Logs/Locus_' + sIdent + '.txt', 'w') as wf:
+        with io.open(home + '/Xmpli/Logs/Locus_' + sIdent + '.txt', 'w', encoding="utf-8") as wf:
             wf.write(line)
     else:
         line = '\n' + line
-        with open(home + '/Xmpli/Logs/Locus_' + sIdent + '.txt', 'a') as wf:
+        with io.open(home + '/Xmpli/Logs/Locus_' + sIdent + '.txt', 'a', encoding="utf-8") as wf:
             wf.write(line)
         #QgsMessageLog.logMessage(message, tag="Locus", level=QgsMessageLog.INFO)
 
