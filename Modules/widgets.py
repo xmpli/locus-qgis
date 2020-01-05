@@ -14,10 +14,10 @@ import os
 home = os.getenv('APPDATA')
 
 methodModes = {
-    'category_search': ['category', 'search_text'],
-    'bounding_box': ['bbox', 'category', 'search_text'],
-    'reference_search': ['reference', 'category'],
-    'point_search': ['location', 'distance'],
+    'category_search': ['categoryGroup', 'searchGroup'],
+    'bounding_box': ['bboxGroup', 'categoryGroup', 'searchGroup'],
+    'reference_search': ['refGroup', 'categoryGroup'],
+    'point_search': ['locationGroup', 'distGroup'],
 }
 
 class SearchWidget():
@@ -31,6 +31,16 @@ class SearchWidget():
             self.setupUi(self)
             self.canvas = iface.mapCanvas()
             self.iface = iface
+
+            self.widgetGroups = {
+                'categoryGroup': self.categoryGroup,
+                'refGroup': self.refGroup,
+                'distGroup': self.distGroup,
+                'searchGroup': self.searchGroup,
+                'locationGroup': self.locationGroup,
+                'bboxGroup': self.bboxGroup,
+            }
+
             self.bboxStarted = False
             self.queryLayers = {
                 'category_search': False,
@@ -87,36 +97,23 @@ class SearchWidget():
             self.adjustSize()
 
         def toggleVisible(self, mode):
-            self.categoryGroup.setVisible(False)
-            self.refGroup.setVisible(False)
-            self.distGroup.setVisible(False)
-            self.searchGroup.setVisible(False)
-            self.locationGroup.setVisible(False)
-            self.bboxGroup.setVisible(False)
+            for group in self.widgetGroups:
+                self.widgetGroups[group].setVisible(False)
 
             for option in methodModes[mode]:
-                if option == 'category':
-                    self.categoryGroup.setVisible(True)
-                elif option == 'search_text':
-                    self.searchGroup.setVisible(True)
-                elif option == 'distance':
-                    self.distGroup.setVisible(True)
-                elif option == 'reference':
-                    self.refGroup.setVisible(True)
-                elif option == 'location':
-                    self.locationGroup.setVisible(True)
-                elif option == 'bbox':
-                    self.bboxGroup.setVisible(True)
+                self.widgetGroups[option].setVisible(True)
 
             self.adjustSize()
 
         def toggleInputs(self, enabled):
             self.settingsButton.setEnabled(enabled)
-            self.locationButton.setEnabled(enabled)
-            self.bboxButton.setEnabled(enabled)
+            self.locationGroup.setEnabled(enabled)
+            self.bboxGroup.setEnabled(enabled)
             self.runButton.setEnabled(enabled)
-            self.searchField.setEnabled(enabled)
-            self.categoryCombo.setEnabled(enabled)
+            self.searchGroup.setEnabled(enabled)
+            self.categoryGroup.setEnabled(enabled)
+            self.refGroup.setEnabled(enabled)
+            self.distGroup.setEnabled(enabled)
             self.modeCombo.setEnabled(enabled)
 
         def startBBoxSet(self):
