@@ -1,3 +1,4 @@
+from PyQt5.QtWidgets import QMessageBox
 from .logging import addLogEntry
 from .config import Config
 import urllib3
@@ -23,20 +24,33 @@ class API():
     @staticmethod
     def makeCall(options, method='GET', callBody={}, debug=False):
         mode = API.buildURL(options)
+        if not mode:
+            addLogEntry('Failed to create URL')
+            return False
         addLogEntry('Make call to: ' + mode)
 
-        conn = http.request(method, mode, body=callBody, headers={
-            'Content-Type': 'application/json; charset=UTF-8',
-        })
+        try:
+            conn = http.request(method, mode, body=callBody, headers={
+                'Content-Type': 'application/json; charset=UTF-8',
+            })
+        except:
+            addLogEntry("Endpoint failed to connect")
+            QMessageBox.critical(None, 'Connection Error', 'Unable to connect to the API endpoint, check your connection or the URL in settings and try again')
+            return False
 
         addLogEntry('Open Connection')
         content = conn.data.decode('UTF-8', 'backslashreplace')
-        print(content)
         addLogEntry('Received data: \n -- [BEGIN DATA] --\n' + content + '\n -- [END DATA] --')
-        data = json.loads(content)
-        if debug:
-            print(data)
-        return data
+
+        try:
+            data = json.loads(content)
+            if debug:
+                print(data)
+            return data
+        except:
+            addLogEntry("Endpoint failed to return correct data")
+            QMessageBox.critical(None, 'Endpoint Error', 'The endpoint gave incorrect data, check the settings to ensure that the URL is correct')
+            return False
 
     @staticmethod
     def buildURL(options):
@@ -62,17 +76,22 @@ class API():
                     url.append(options['search_text'])
             elif sect == '{distance}':
                 if len(options['distance']) > 0:
-                    url.append(options['distance'])
+                    try:
+                        # Ensure that the distance is a float value
+                        distance = float(options['distance'])
+                        url.append(str(distance))
+                    except:
+                        QMessageBox.information(None, 'Data Error', 'Distance must be a decimal number.\n\nPlease update the distance and try again')
+                        return False
             elif sect == '{reference}':
                 if len(options['reference']) > 0:
                     url.append(options['reference'])
             elif sect == '{location}':
-                part = options['crs'] + ';POINT(' + options['location']['x'] + ' ' + options['location']['y'] + ')'
+                part = options['crs'] + ';POINT(' + str(options['location']['x']) + ' ' + str(options['location']['y']) + ')'
                 url.append(part)
             elif sect == '{bbox}':
-                maxPart = str(options['bbox']['maxx']) + ' ' + str(options['bbox']['maxy'])
-                minPart = str(options['bbox']['minx']) + ' ' + str(options['bbox']['miny'])
+                maxPart = str(options['bbox'][2]) + ' ' + str(options['bbox'][3])
+                minPart = str(options['bbox'][0]) + ' ' + str(options['bbox'][1])
                 url.append(maxPart + ',' + minPart)
 
-        print(url)
         return endpoint + '/'.join(url)
