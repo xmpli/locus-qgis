@@ -39,7 +39,7 @@ class LocusQGIS:
         WidgetManager(self)
 
     def initGui(self):
-        self.action = QAction('Open', self.iface.mainWindow())
+        self.action = QAction('LOCUS', self.iface.mainWindow())
         self.action.triggered.connect(self.run)
         self.iface.addToolBarIcon(self.action)
 
