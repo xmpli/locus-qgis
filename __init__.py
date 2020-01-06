@@ -62,4 +62,4 @@ class LocusQGIS:
         self.dockwidget.closingPlugin.connect(self.onClosePlugin)
 
         # Load the widget
-        WidgetManager.ChangeWidget(self.dockwidget, False)
+        WidgetManager.ChangeWidget(self.dockwidget)
