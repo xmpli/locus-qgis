@@ -4,10 +4,9 @@ import simplejson
 from qgis.core import QgsMessageLog
 import os
 import io
+from os.path import expanduser
 
-home = os.getenv('APPDATA')
-if not isinstance(home, str):
-    home = '..'
+home = expanduser("~")
 
 # This is honestly a bit of a mess and needs reworking anyway
 # But, it's the base of a logging module.

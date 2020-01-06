@@ -2,11 +2,9 @@ from .logging import addLogEntry
 import shutil
 import json
 import os
+from os.path import expanduser
 
-# Store local data in %user%/AppData/Roaming
-home = os.getenv('APPDATA')
-if not isinstance(home, str):
-    home = '..'
+home = expanduser("~")
 
 class Config():
     config = {}
