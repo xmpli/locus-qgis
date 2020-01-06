@@ -1,5 +1,5 @@
 from .logging import addLogEntry
-from PyQt5 import QtGui, QtWidgets, uic
+from PyQt5 import QtGui, QtWidgets, uic, QtGui
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import pyqtSignal, Qt
 from qgis.gui import QgsMapToolEmitPoint
@@ -95,7 +95,7 @@ class SearchWidget():
 
             # Open the settings widget on button click
             widget = SettingsWidget.widget(iface)
-            self.settingsButton.clicked.connect(lambda: WidgetManager.ChangeWidget(widget, False))
+            self.settingsButton.clicked.connect(lambda: WidgetManager.ChangeWidget(widget))
 
             self.runButton.clicked.connect(self.runQuery)
             self.adjustSize()
@@ -238,7 +238,7 @@ class SettingsWidget():
         def returnToSearch(self):
             # Go back to the main search widget
             widget = SearchWidget.widget(self.iface)
-            WidgetManager.ChangeWidget(widget, False)
+            WidgetManager.ChangeWidget(widget)
 
         def closeEvent(self, event):
             self.closingPlugin.emit()
