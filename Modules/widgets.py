@@ -11,10 +11,9 @@ import urllib.parse
 import json
 import io
 import os
+from os.path import expanduser
 
-home = os.getenv('APPDATA')
-if not isinstance(home, str):
-    home = '..'
+home = expanduser("~")
 
 methodModes = {
     'category_search': ['categoryGroup', 'searchGroup'],
