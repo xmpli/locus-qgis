@@ -1,5 +1,6 @@
 from .logging import addLogEntry
 from PyQt5 import QtGui, QtWidgets, uic
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import pyqtSignal, Qt
 from qgis.gui import QgsMapToolEmitPoint
 from qgis.core import QgsVectorLayer, QgsProject
@@ -71,20 +72,22 @@ class SearchWidget():
             self.locationTool = QgsMapToolEmitPoint(self.canvas)
             self.locationTool.canvasClicked.connect(self.setLocation)
             self.locationButton.clicked.connect(self.startLocationSet)
-
             self.bboxTool = QgsMapToolEmitPoint(self.canvas)
             self.bboxTool.canvasClicked.connect(self.setBBox)
             self.bboxButton.clicked.connect(self.startBBoxSet)
 
             options = API.makeCall(self.options)
-            self.categoryCombo.addItem('')
-            self.options['category'] = ''
-            self.options['method'] = 'category_search'
-            self.toggleVisible('category_search')
+            if not options:
+                self.toggleInputs(False, False)
+            else:
+                self.categoryCombo.addItem('')
+                self.options['category'] = ''
+                self.options['method'] = 'category_search'
+                self.toggleVisible('category_search')
 
-            for option in options:
-                if isinstance(option, str):
-                    self.categoryCombo.addItem(option)
+                for option in options:
+                    if isinstance(option, str):
+                        self.categoryCombo.addItem(option)
 
             self.categoryCombo.activated[str].connect(self.categoryChanged)
             self.modeCombo.activated[str].connect(self.methodChanged)
@@ -105,8 +108,9 @@ class SearchWidget():
 
             self.adjustSize()
 
-        def toggleInputs(self, enabled):
-            self.settingsButton.setEnabled(enabled)
+        def toggleInputs(self, enabled, settings=True):
+            if settings:
+                self.settingsButton.setEnabled(enabled)
             self.locationGroup.setEnabled(enabled)
             self.bboxGroup.setEnabled(enabled)
             self.runButton.setEnabled(enabled)
@@ -173,7 +177,17 @@ class SearchWidget():
             self.options['reference'] = urllib.parse.quote(self.referenceField.text(), safe='')
             self.toggleInputs(False)
 
-            data = json.dumps(API.makeCall(self.options, debug=True))
+            call = API.makeCall(self.options, debug=True)
+            if not call:
+                self.toggleInputs(True)
+                return
+
+            if len(call['features']) < 1:
+                QMessageBox.information(None, 'Data Warning', 'No features were returned from the query')
+                self.toggleInputs(True)
+                return
+
+            data = json.dumps(call)
             date = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
             fileName = home + '/Xmpli/tmp/Locus_' + date + '_' + self.options['method'] + '_results.json'
             addLogEntry('Create cache file: ' + fileName)
