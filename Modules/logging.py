@@ -6,6 +6,8 @@ import os
 import io
 
 home = os.getenv('APPDATA')
+if not isinstance(home, str):
+    home = '..'
 
 # This is honestly a bit of a mess and needs reworking anyway
 # But, it's the base of a logging module.

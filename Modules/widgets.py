@@ -13,6 +13,8 @@ import io
 import os
 
 home = os.getenv('APPDATA')
+if not isinstance(home, str):
+    home = '..'
 
 methodModes = {
     'category_search': ['categoryGroup', 'searchGroup'],
