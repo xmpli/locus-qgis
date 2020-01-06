@@ -196,21 +196,10 @@ class SearchWidget():
             with io.open(fileName, 'w+', encoding="utf-8") as wf:
                 wf.write(data)
 
-            if not self.queryLayers[self.options['method']]:
-                addLogEntry('Create Layer')
-                self.queryLayers[self.options['method']] = QgsVectorLayer(fileName, 'Locus_API_' + self.options['method'] + '_query_results', 'ogr')
-                addLogEntry('Add Layer')
-                QgsProject.instance().addMapLayer(self.queryLayers[self.options['method']])
-            else:
-                addLogEntry('Append to layer')
-                vectorLayer = QgsVectorLayer(fileName, self.options['method'] + '_results', 'ogr')
-                addLogEntry('Get Provider')
-                dataProvider = self.queryLayers[self.options['method']].dataProvider()
-                addLogEntry('Get Features')
-                features = vectorLayer.getFeatures()
-                addLogEntry('Append Features')
-                dataProvider.addFeatures(features)
-                self.queryLayers[self.options['method']].updateExtents()
+            addLogEntry('Create Layer')
+            queryLayer = QgsVectorLayer(fileName, 'Locus_API_' + self.options['method'] + '_query_results', 'ogr')
+            addLogEntry('Add Layer')
+            QgsProject.instance().addMapLayer(queryLayer)
             self.toggleInputs(True)
 
 
