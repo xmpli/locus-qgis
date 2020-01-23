@@ -1,6 +1,6 @@
 from .logging import addLogEntry
 from PyQt5 import QtGui, QtWidgets, uic, QtGui
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QLineEdit, QGroupBox, QVBoxLayout, QSizePolicy, QHBoxLayout
 from PyQt5.QtCore import pyqtSignal, Qt
 from qgis.gui import QgsMapToolEmitPoint
 from qgis.core import QgsVectorLayer, QgsProject
@@ -16,10 +16,78 @@ from os.path import expanduser
 home = expanduser("~")
 
 methodModes = {
-    'category_search': ['categoryGroup', 'searchGroup'],
-    'bounding_box': ['bboxGroup', 'categoryGroup', 'searchGroup'],
-    'reference_search': ['refGroup', 'categoryGroup'],
-    'point_search': ['locationGroup', 'distGroup'],
+    'category_search': [{
+            'type': 'preMade',
+            'name': 'categoryGroup',
+        }, {
+            'type': 'text',
+            'name': 'search',
+            'default': '',
+        }, {
+            'type': 'text',
+            'name': 'limit',
+            'default': '100',
+        }, {
+            'type': 'text',
+            'name': 'offset',
+            'default': '0',
+        }],
+    'bounding_box': [{
+            'type': 'preMade',
+            'name': 'bboxGroup',
+        }, {
+            'type': 'preMade',
+            'name': 'categoryGroup',
+        }, {
+            'type': 'text',
+            'name': 'search',
+            'default': '',
+        }],
+    'reference_search': [{
+            'type': 'category',
+            'typeName': 'categoryGroup',
+        }, {
+            'type': 'text',
+            'name': 'reference',
+            'default': '',
+        }, {
+            'type': 'text',
+            'name': 'limit',
+            'default': '100',
+        }, {
+            'type': 'text',
+            'name': 'offset',
+            'default': '0',
+        }],
+    'point_search': [{
+            'type': 'preMade',
+            'name': 'locationGroup',
+        }, {
+            'type': 'text',
+            'name': 'distance',
+            'default': '100',
+        }, {
+            'type': 'text',
+            'name': 'limit',
+            'default': '100',
+        }, {
+            'type': 'text',
+            'name': 'offset',
+            'default': '0',
+        }],
+    'address_search': [{
+            'type': 'text',
+            'name': 'address',
+            'default': '',
+        }, {
+            'type': 'text',
+            'name': 'limit',
+            'default': '100',
+        }, {
+            'type': 'text',
+            'name': 'offset',
+            'default': '0',
+        }],
 }
 
 class SearchWidget():
@@ -34,11 +102,10 @@ class SearchWidget():
             self.canvas = iface.mapCanvas()
             self.iface = iface
 
+            self.parts = []
+
             self.widgetGroups = {
                 'categoryGroup': self.categoryGroup,
-                'refGroup': self.refGroup,
-                'distGroup': self.distGroup,
-                'searchGroup': self.searchGroup,
                 'locationGroup': self.locationGroup,
                 'bboxGroup': self.bboxGroup,
             }
@@ -49,6 +116,7 @@ class SearchWidget():
                 'bounding_box': False,
                 'reference_search': False,
                 'point_search': False,
+                'address_search': False,
             }
 
             for key in self.queryLayers:
@@ -59,7 +127,7 @@ class SearchWidget():
             self.options = {
                 'category': '',
                 'method': 'list_categories',
-                'search_text': '',
+                'search': '',
                 'location': {
                     'x': 0,
                     'y': 0,
@@ -68,6 +136,9 @@ class SearchWidget():
                 'crs': 'SRID=4326',
                 'reference': '',
                 'distance': '',
+                'limit': '',
+                'offset': '',
+                'address': '',
             }
 
             self.locationTool = QgsMapToolEmitPoint(self.canvas)
@@ -91,6 +162,10 @@ class SearchWidget():
                         self.categoryCombo.addItem(option)
 
             self.categoryCombo.activated[str].connect(self.categoryChanged)
+
+            for mode in methodModes:
+                self.modeCombo.addItem(mode)
+
             self.modeCombo.activated[str].connect(self.methodChanged)
 
             # Open the settings widget on button click
@@ -104,8 +179,35 @@ class SearchWidget():
             for group in self.widgetGroups:
                 self.widgetGroups[group].setVisible(False)
 
+            for i in reversed(range(self.partLayout.count())):
+                layout = self.partLayout.itemAt(i).layout()
+                for y in reversed(range(layout.count())):
+                    layout.itemAt(y).widget().setParent(None)
+                self.partLayout.itemAt(i).layout().setParent(None)
+
+            self.adjustSize()
+
+            self.parts = {}
+
             for option in methodModes[mode]:
-                self.widgetGroups[option].setVisible(True)
+                if option['type'] == 'preMade':
+                    self.widgetGroups[option['name']].setVisible(True)
+                elif option['type'] == 'text':
+                    hLayout = QHBoxLayout()
+
+                    group = QGroupBox(option['name'].capitalize())
+                    self.parts[option['name']] = QLineEdit(self)
+                    self.parts[option['name']].setPlaceholderText(option['default'])
+                    vbox = QVBoxLayout()
+                    vbox.addWidget(self.parts[option['name']])
+
+                    group.setLayout(vbox)
+                    group.resize(300, 65)
+                    group.setMaximumWidth(300)
+                    group.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+
+                    hLayout.addWidget(group)
+                    self.partLayout.addLayout(hLayout)
 
             self.adjustSize()
 
@@ -115,11 +217,13 @@ class SearchWidget():
             self.locationGroup.setEnabled(enabled)
             self.bboxGroup.setEnabled(enabled)
             self.runButton.setEnabled(enabled)
-            self.searchGroup.setEnabled(enabled)
             self.categoryGroup.setEnabled(enabled)
-            self.refGroup.setEnabled(enabled)
-            self.distGroup.setEnabled(enabled)
             self.modeCombo.setEnabled(enabled)
+
+            for i in reversed(range(self.partLayout.count())):
+                layout = self.partLayout.itemAt(i).layout()
+                for y in reversed(range(layout.count())):
+                    layout.itemAt(y).widget().setEnabled(enabled)
 
         def startBBoxSet(self):
             self.toggleInputs(False)
@@ -173,9 +277,11 @@ class SearchWidget():
 
         def runQuery(self):
             self.options['crs'] = 'SRID=' + self.canvas.mapSettings().destinationCrs().authid().split(':')[1]
-            self.options['search_text'] = urllib.parse.quote(self.searchField.text(), safe='')
-            self.options['distance'] = urllib.parse.quote(self.distanceField.text(), safe='')
-            self.options['reference'] = urllib.parse.quote(self.referenceField.text(), safe='')
+
+            for part in methodModes[self.options['method']]:
+                if part['type'] == 'text':
+                    self.options[part['name']] = urllib.parse.quote(self.parts[part['name']].text(), safe='')
+
             self.toggleInputs(False)
 
             call = API.makeCall(self.options, debug=True)

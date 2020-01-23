@@ -9,7 +9,7 @@ This will show directory and go to terminal then cd python/plugins/
 
 ln -s ~/Webstorm/locus-qgis/ locus-qgis
 
-###Simple install
+### Simple install
 - Download the latest release from [here](https://github.com/xmpli/locus-qgis/releases)
 - Open QGIS
 - Navigate to `Plugins > Manage and Install Plugins...`
