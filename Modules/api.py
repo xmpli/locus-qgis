@@ -12,14 +12,6 @@ http = urllib3.PoolManager(
     ca_certs=certifi.where()
 )
 
-callPoints = {
-    'category_search': 'search/{category}/{search_text}',
-    'bounding_box': 'bboxsearch/{bbox}/{category}/{search_text}',
-    'reference_search': 'refsearch/{reference}/{category}',
-    'point_search': 'pointsearch/{location}/{distance}',
-    'list_categories': 'list_categories/',
-}
-
 class API():
     @staticmethod
     def makeCall(options, method='GET', callBody={}, debug=False):
@@ -58,7 +50,12 @@ class API():
         if endpoint[-1:] != '/':
             endpoint += '/'
 
-        method = callPoints[options['method']]
+        try:
+            method = Config.getConfig()['api_points'][options['method']]
+        except:
+            Config.resetConfig()
+            method = Config.getConfig()['api_points'][options['method']]
+
         breakdown = method.split('/')
 
         url = [ breakdown[0] ]
@@ -71,9 +68,16 @@ class API():
 
             if sect == '{category}':
                 url.append(options['category'])
-            elif sect == '{search_text}':
-                if len(options['search_text']) > 0:
-                    url.append(options['search_text'])
+            elif sect == '{search}':
+                if len(options['search']) > 0:
+                    url.append(options['search'])
+                else:
+                    url.append(' ')
+            elif sect == '{address}':
+                if len(options['address']) > 0:
+                    url.append(options['address'])
+                else:
+                    url.append(' ')
             elif sect == '{distance}':
                 if len(options['distance']) > 0:
                     try:
@@ -93,5 +97,27 @@ class API():
                 maxPart = str(options['bbox'][2]) + ' ' + str(options['bbox'][3])
                 minPart = str(options['bbox'][0]) + ' ' + str(options['bbox'][1])
                 url.append(maxPart + ',' + minPart)
+            elif sect == '{limit}':
+                if len(options['limit']) > 0:
+                    try:
+                        # Ensure that the distance is a float value
+                        limit = int(options['limit'])
+                        url.append(str(limit))
+                    except:
+                        QMessageBox.information(None, 'Data Error', 'Limit must be a whole number.\n\nPlease update the limit and try again')
+                        return False
+                else:
+                    url.append('100')
+            elif sect == '{offset}':
+                if len(options['offset']) > 0:
+                    try:
+                        # Ensure that the distance is a float value
+                        offset = int(options['offset'])
+                        url.append(str(offset))
+                    except:
+                        QMessageBox.information(None, 'Data Error', 'Offset must be a whole number.\n\nPlease update the offset and try again')
+                        return False
+                else:
+                    url.append('0')
 
         return endpoint + '/'.join(url)
